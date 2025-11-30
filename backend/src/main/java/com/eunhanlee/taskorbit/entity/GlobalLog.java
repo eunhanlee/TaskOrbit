@@ -50,3 +50,4 @@ public class GlobalLog {
     private LocalDateTime createdAt;
 }
 
+

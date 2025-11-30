@@ -85,3 +85,4 @@ CREATE TRIGGER update_task_logs_updated_at BEFORE UPDATE ON task_logs
 CREATE TRIGGER update_recurring_task_settings_updated_at BEFORE UPDATE ON recurring_task_settings
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+

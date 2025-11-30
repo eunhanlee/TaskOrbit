@@ -60,3 +60,4 @@ public class RecurringTaskSetting {
     private LocalDateTime updatedAt;
 }
 
+

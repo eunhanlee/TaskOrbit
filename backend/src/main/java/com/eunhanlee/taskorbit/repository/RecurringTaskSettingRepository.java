@@ -26,3 +26,4 @@ public interface RecurringTaskSettingRepository extends JpaRepository<RecurringT
     List<RecurringTaskSetting> findByCategory(String category);
 }
 
+

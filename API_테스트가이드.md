@@ -165,3 +165,4 @@ curl -X POST http://localhost:8080/api/tasks -H "Content-Type: application/json"
 - 백엔드 서버가 실행 중이어야 합니다
 - CORS가 설정되어 있어 프론트엔드에서 호출 가능합니다
 
+

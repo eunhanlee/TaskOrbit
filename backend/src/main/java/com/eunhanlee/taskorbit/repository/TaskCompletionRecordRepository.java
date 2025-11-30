@@ -36,3 +36,4 @@ public interface TaskCompletionRecordRepository extends JpaRepository<TaskComple
     boolean existsByTaskId(Long taskId);
 }
 
+
