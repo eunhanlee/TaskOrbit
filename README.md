@@ -1,10 +1,3 @@
-TaskOrbit
-TaskOrbit: Your tasks, on a clear, steady track.
-
-Here is your entire specification rewritten **clearly and professionally in English**,
-
-with **no changes to meaning or logic** — only clean translation and formatting.
-
 # **0. Project Information**
 
 - **Project Name:** TaskOrbit
