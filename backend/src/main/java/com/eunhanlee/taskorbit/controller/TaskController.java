@@ -113,8 +113,7 @@ public class TaskController {
                 .category(request.getCategory())
                 .size(request.getSize())
                 .status(request.getStatus())
-                .workDate(request.getWorkDate())
-                .scheduleDate(request.getScheduleDate())
+                .dueDate(request.getDueDate())
                 .build();
         
         Task created = taskService.createTask(task);
@@ -132,8 +131,7 @@ public class TaskController {
                 .category(request.getCategory())
                 .size(request.getSize())
                 .status(request.getStatus())
-                .workDate(request.getWorkDate())
-                .scheduleDate(request.getScheduleDate())
+                .dueDate(request.getDueDate())
                 .build();
         
         Task updated = taskService.updateTask(id, task);
@@ -155,6 +153,16 @@ public class TaskController {
     public ResponseEntity<TaskResponse> completeTask(@PathVariable Long id) {
         Task task = taskService.completeTask(id);
         return ResponseEntity.ok(TaskResponse.from(task));
+    }
+
+    // 작업 완료 취소 (Done → Ongoing)
+    @PostMapping("/{id}/uncomplete")
+    public ResponseEntity<TaskResponse> uncompleteTask(@PathVariable Long id) {
+        Task task = taskService.uncompleteTask(id);
+        String nextAction = taskLogService.getLatestLog(id)
+                .map(TaskLog::getNextAction)
+                .orElse(null);
+        return ResponseEntity.ok(TaskResponse.from(task, nextAction));
     }
 
     // 작업을 Waiting 상태로 변경

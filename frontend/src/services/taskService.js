@@ -28,6 +28,9 @@ export const taskService = {
   // 작업 완료
   completeTask: (id) => api.post(`/tasks/${id}/complete`),
 
+  // 작업 완료 취소 (Done → Ongoing)
+  uncompleteTask: (id) => api.post(`/tasks/${id}/uncomplete`),
+
   // 작업을 Waiting 상태로 변경
   setTaskWaiting: (id) => api.post(`/tasks/${id}/waiting`),
 

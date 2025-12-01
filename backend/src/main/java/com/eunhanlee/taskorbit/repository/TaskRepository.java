@@ -14,12 +14,12 @@ import java.util.Optional;
 @Repository
 public interface TaskRepository extends JpaRepository<Task, Long> {
 
-    // Today 탭: schedule_date가 오늘 이하인 작업들
-    @Query("SELECT t FROM Task t WHERE t.scheduleDate <= :date AND t.status != 'DONE' ORDER BY t.scheduleDate ASC, t.createdAt ASC")
+    // Today 탭: due_date가 오늘 이하인 작업들
+    @Query("SELECT t FROM Task t WHERE t.dueDate <= :date AND t.status != 'DONE' ORDER BY t.dueDate ASC, t.createdAt ASC")
     List<Task> findTodayTasks(@Param("date") LocalDate date);
 
-    // Later 탭: schedule_date가 오늘 이후인 작업들
-    @Query("SELECT t FROM Task t WHERE t.scheduleDate > :date ORDER BY t.scheduleDate ASC, t.createdAt ASC")
+    // Later 탭: due_date가 오늘 이후인 작업들
+    @Query("SELECT t FROM Task t WHERE t.dueDate > :date ORDER BY t.dueDate ASC, t.createdAt ASC")
     List<Task> findLaterTasks(@Param("date") LocalDate date);
 
     // Done 탭: status가 DONE인 작업들
@@ -30,13 +30,13 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     List<Task> findCompletedTasks();
 
     // 특정 날짜의 작업들
-    List<Task> findByScheduleDate(LocalDate scheduleDate);
+    List<Task> findByDueDate(LocalDate dueDate);
 
     // 특정 날짜 이하의 작업들
-    List<Task> findByScheduleDateLessThanEqual(LocalDate date);
+    List<Task> findByDueDateLessThanEqual(LocalDate date);
 
     // 특정 날짜 이후의 작업들
-    List<Task> findByScheduleDateGreaterThan(LocalDate date);
+    List<Task> findByDueDateGreaterThan(LocalDate date);
 
     // 카테고리별 조회
     List<Task> findByCategory(String category);
@@ -44,7 +44,5 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     // 상태별 조회
     List<Task> findByStatus(TaskStatus status);
 
-    // work_date로 조회
-    List<Task> findByWorkDate(LocalDate workDate);
 }
 

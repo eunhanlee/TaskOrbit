@@ -44,11 +44,8 @@ public class Task {
     @Builder.Default
     private TaskStatus status = TaskStatus.ONGOING;
 
-    @Column(nullable = false, name = "work_date")
-    private LocalDate workDate;
-
-    @Column(nullable = false, name = "schedule_date")
-    private LocalDate scheduleDate;
+    @Column(nullable = false, name = "due_date")
+    private LocalDate dueDate;
 
     @CreationTimestamp
     @Column(nullable = false, name = "created_at", updatable = false)

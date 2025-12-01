@@ -189,6 +189,26 @@ const TaskLogModal = ({ task, isOpen, onClose }) => {
                 </button>
               )}
 
+              {/* History Log Section */}
+              {logs.length > 0 && (
+                <div className="mb-6 bg-gray-50 border border-gray-300 rounded-lg p-4">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                    History Log (누적 기록)
+                  </h3>
+                  <div className="bg-white rounded p-4 border border-gray-200">
+                    {logs[0]?.historyLog ? (
+                      <pre className="text-sm text-gray-700 whitespace-pre-wrap font-sans">
+                        {logs[0].historyLog}
+                      </pre>
+                    ) : (
+                      <div className="text-sm text-gray-500 italic">
+                        아직 누적된 기록이 없습니다. 로그를 추가하면 여기에 표시됩니다.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Log List */}
               {logs.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
@@ -196,6 +216,9 @@ const TaskLogModal = ({ task, isOpen, onClose }) => {
                 </div>
               ) : (
                 <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                    개별 로그
+                  </h3>
                   {logs.map((log) => (
                     <div
                       key={log.id}

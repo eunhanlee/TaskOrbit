@@ -18,8 +18,7 @@ public class TaskRequest {
     private String category;
     private TaskSize size;
     private TaskStatus status;
-    private LocalDate workDate;
-    private LocalDate scheduleDate;
+    private LocalDate dueDate;
 }
 
 

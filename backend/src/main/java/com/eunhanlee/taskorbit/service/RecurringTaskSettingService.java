@@ -93,6 +93,7 @@ public class RecurringTaskSettingService {
     public void generateRecurringTasks() {
         List<RecurringTaskSetting> activeSettings = getActiveSettings();
         LocalDate today = LocalDate.now();
+        int generatedCount = 0;
         
         for (RecurringTaskSetting setting : activeSettings) {
             if (shouldGenerateTask(setting, today)) {
@@ -100,28 +101,49 @@ public class RecurringTaskSettingService {
                         .title(setting.getTitle())
                         .category(setting.getCategory())
                         .size(setting.getSize())
-                        .workDate(today)
-                        .scheduleDate(today)
+                        .dueDate(today)
                         .build();
                 
                 taskRepository.save(task);
-                log.info("Generated recurring task: {}", task.getTitle());
+                generatedCount++;
+                log.info("Generated recurring task: {} (type: {})", task.getTitle(), setting.getRecurrenceType());
             }
         }
+        
+        log.info("Generated {} recurring tasks", generatedCount);
     }
 
     // 반복 작업 생성 여부 판단
     private boolean shouldGenerateTask(RecurringTaskSetting setting, LocalDate date) {
-        // TODO: recurrenceType과 recurrenceConfig에 따라 생성 여부 결정
-        // 현재는 DAILY만 구현
-        if (setting.getRecurrenceType() == RecurrenceType.DAILY) {
-            // 이미 오늘 생성된 작업이 있는지 확인
-            List<Task> todayTasks = taskRepository.findByScheduleDate(date);
-            return todayTasks.stream()
-                    .noneMatch(task -> task.getTitle().equals(setting.getTitle()) &&
-                            task.getCategory() != null && task.getCategory().equals(setting.getCategory()));
+        // 이미 오늘 생성된 작업이 있는지 확인 (제목, 카테고리, dueDate로 중복 체크)
+        List<Task> todayTasks = taskRepository.findByDueDate(date);
+        boolean alreadyExists = todayTasks.stream()
+                .anyMatch(task -> task.getTitle().equals(setting.getTitle()) &&
+                        ((task.getCategory() == null && setting.getCategory() == null) ||
+                         (task.getCategory() != null && task.getCategory().equals(setting.getCategory()))) &&
+                        task.getDueDate().equals(date));
+        
+        if (alreadyExists) {
+            return false;
         }
-        return false;
+        
+        // 반복 유형에 따라 생성 여부 결정
+        switch (setting.getRecurrenceType()) {
+            case DAILY:
+                return true; // 매일 생성
+            case WEEKLY:
+                // 매주 같은 요일에 생성 (설정 생성일 기준)
+                return date.getDayOfWeek() == setting.getCreatedAt().toLocalDate().getDayOfWeek();
+            case MONTHLY:
+                // 매월 같은 일자에 생성 (설정 생성일 기준)
+                return date.getDayOfMonth() == setting.getCreatedAt().toLocalDate().getDayOfMonth();
+            case YEARLY:
+                // 매년 같은 월/일자에 생성 (설정 생성일 기준)
+                return date.getMonthValue() == setting.getCreatedAt().toLocalDate().getMonthValue() &&
+                       date.getDayOfMonth() == setting.getCreatedAt().toLocalDate().getDayOfMonth();
+            default:
+                return false;
+        }
     }
 }
 

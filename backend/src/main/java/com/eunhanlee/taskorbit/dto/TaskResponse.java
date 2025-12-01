@@ -21,8 +21,7 @@ public class TaskResponse {
     private String category;
     private TaskSize size;
     private TaskStatus status;
-    private LocalDate workDate;
-    private LocalDate scheduleDate;
+    private LocalDate dueDate;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private String nextAction; // 최신 로그의 nextAction
@@ -34,8 +33,7 @@ public class TaskResponse {
                 .category(task.getCategory())
                 .size(task.getSize())
                 .status(task.getStatus())
-                .workDate(task.getWorkDate())
-                .scheduleDate(task.getScheduleDate())
+                .dueDate(task.getDueDate())
                 .createdAt(task.getCreatedAt())
                 .updatedAt(task.getUpdatedAt())
                 .nextAction(nextAction)

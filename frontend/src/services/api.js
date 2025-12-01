@@ -36,7 +36,16 @@ const api = {
       body: JSON.stringify(data),
     });
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      let errorMessage = `HTTP error! status: ${response.status}`;
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorMessage;
+      } catch (e) {
+        // JSON 파싱 실패 시 기본 메시지 사용
+      }
+      const error = new Error(errorMessage);
+      error.response = { data: { message: errorMessage }, status: response.status };
+      throw error;
     }
     return response.json();
   },

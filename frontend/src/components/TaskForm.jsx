@@ -1,11 +1,22 @@
 import { useState } from 'react';
 
 const TaskForm = ({ task, onSubmit, onCancel }) => {
+  // 날짜를 YYYY-MM-DD 형식으로 변환
+  const formatDateForInput = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   const [formData, setFormData] = useState({
     title: task?.title || '',
     category: task?.category || '',
     size: task?.size || 'UNDER_30_MIN',
     status: task?.status || 'ONGOING',
+    dueDate: task?.dueDate ? formatDateForInput(task.dueDate) : new Date().toISOString().split('T')[0],
   });
 
   const handleSubmit = (e) => {
@@ -53,6 +64,20 @@ const TaskForm = ({ task, onSubmit, onCancel }) => {
           <option value="UNDER_30_MIN">30분 미만</option>
           <option value="OVER_1_HOUR">1시간 이상</option>
         </select>
+      </div>
+
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          마감일 (Due Date) *
+        </label>
+        <input
+          type="date"
+          value={formData.dueDate}
+          onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          required
+        />
+        <p className="mt-1 text-xs text-gray-500">Today 탭에 표시될 날짜 (미완료 시 자동으로 다음날로 이동)</p>
       </div>
 
       <div className="flex gap-2">

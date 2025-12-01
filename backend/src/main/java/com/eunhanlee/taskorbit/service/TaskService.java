@@ -2,9 +2,11 @@ package com.eunhanlee.taskorbit.service;
 
 import com.eunhanlee.taskorbit.entity.Task;
 import com.eunhanlee.taskorbit.entity.TaskCompletionRecord;
+import com.eunhanlee.taskorbit.entity.enums.ActionType;
 import com.eunhanlee.taskorbit.entity.enums.TaskStatus;
 import com.eunhanlee.taskorbit.repository.TaskCompletionRecordRepository;
 import com.eunhanlee.taskorbit.repository.TaskRepository;
+import com.eunhanlee.taskorbit.util.TaskConverter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -12,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -21,14 +24,15 @@ public class TaskService {
 
     private final TaskRepository taskRepository;
     private final TaskCompletionRecordRepository completionRecordRepository;
+    private final GlobalLogService globalLogService;
 
-    // Today 탭: schedule_date <= today인 작업들
+    // Today 탭: due_date <= today인 작업들
     public List<Task> getTodayTasks() {
         LocalDate today = LocalDate.now();
         return taskRepository.findTodayTasks(today);
     }
 
-    // Later 탭: schedule_date > today인 작업들
+    // Later 탭: due_date > today인 작업들
     public List<Task> getLaterTasks() {
         LocalDate today = LocalDate.now();
         return taskRepository.findLaterTasks(today);
@@ -52,17 +56,25 @@ public class TaskService {
     // 작업 생성
     @Transactional
     public Task createTask(Task task) {
-        // 새 작업 생성 시 work_date와 schedule_date를 오늘로 설정
-        if (task.getWorkDate() == null) {
-            task.setWorkDate(LocalDate.now());
-        }
-        if (task.getScheduleDate() == null) {
-            task.setScheduleDate(LocalDate.now());
+        // 새 작업 생성 시 due_date를 오늘로 설정
+        if (task.getDueDate() == null) {
+            task.setDueDate(LocalDate.now());
         }
         if (task.getStatus() == null) {
             task.setStatus(TaskStatus.ONGOING);
         }
-        return taskRepository.save(task);
+        Task savedTask = taskRepository.save(task);
+        
+        // GlobalLog 기록
+        globalLogService.createLog(
+            "Task",
+            savedTask.getId(),
+            ActionType.CREATE,
+            null,
+            TaskConverter.taskToMap(savedTask)
+        );
+        
+        return savedTask;
     }
 
     // 작업 조회
@@ -75,6 +87,7 @@ public class TaskService {
     @Transactional
     public Task updateTask(Long id, Task updatedTask) {
         Task task = getTask(id);
+        Map<String, Object> oldData = TaskConverter.taskToMap(task);
         
         if (updatedTask.getTitle() != null) {
             task.setTitle(updatedTask.getTitle());
@@ -88,26 +101,48 @@ public class TaskService {
         if (updatedTask.getStatus() != null) {
             task.setStatus(updatedTask.getStatus());
         }
-        if (updatedTask.getWorkDate() != null) {
-            task.setWorkDate(updatedTask.getWorkDate());
-        }
-        if (updatedTask.getScheduleDate() != null) {
-            task.setScheduleDate(updatedTask.getScheduleDate());
+        if (updatedTask.getDueDate() != null) {
+            task.setDueDate(updatedTask.getDueDate());
         }
         
-        return taskRepository.save(task);
+        Task savedTask = taskRepository.save(task);
+        
+        // GlobalLog 기록
+        globalLogService.createLog(
+            "Task",
+            savedTask.getId(),
+            ActionType.UPDATE,
+            oldData,
+            TaskConverter.taskToMap(savedTask)
+        );
+        
+        return savedTask;
     }
 
     // 작업 삭제
     @Transactional
     public void deleteTask(Long id) {
+        Task task = getTask(id);
+        Map<String, Object> oldData = TaskConverter.taskToMap(task);
+        
         taskRepository.deleteById(id);
+        
+        // GlobalLog 기록
+        globalLogService.createLog(
+            "Task",
+            id,
+            ActionType.DELETE,
+            oldData,
+            null
+        );
     }
 
     // 작업 완료 처리
     @Transactional
     public Task completeTask(Long id) {
         Task task = getTask(id);
+        Map<String, Object> oldData = TaskConverter.taskToMap(task);
+        
         task.setStatus(TaskStatus.DONE);
         
         // 완료 기록 생성
@@ -117,36 +152,99 @@ public class TaskService {
                 .build();
         completionRecordRepository.save(record);
         
-        return taskRepository.save(task);
+        Task savedTask = taskRepository.save(task);
+        
+        // GlobalLog 기록
+        globalLogService.createLog(
+            "Task",
+            savedTask.getId(),
+            ActionType.UPDATE,
+            oldData,
+            TaskConverter.taskToMap(savedTask)
+        );
+        
+        return savedTask;
+    }
+
+    // 작업 완료 취소 (Done → Ongoing)
+    @Transactional
+    public Task uncompleteTask(Long id) {
+        Task task = getTask(id);
+        Map<String, Object> oldData = TaskConverter.taskToMap(task);
+        
+        // 완료 기록 삭제
+        completionRecordRepository.findByTaskId(id).ifPresent(completionRecordRepository::delete);
+        
+        // 상태를 Ongoing으로 변경
+        task.setStatus(TaskStatus.ONGOING);
+        
+        Task savedTask = taskRepository.save(task);
+        
+        // GlobalLog 기록
+        globalLogService.createLog(
+            "Task",
+            savedTask.getId(),
+            ActionType.UPDATE,
+            oldData,
+            TaskConverter.taskToMap(savedTask)
+        );
+        
+        return savedTask;
     }
 
     // 작업을 Waiting 상태로 변경
     @Transactional
     public Task setTaskWaiting(Long id) {
         Task task = getTask(id);
+        Map<String, Object> oldData = TaskConverter.taskToMap(task);
+        
         task.setStatus(TaskStatus.WAITING);
-        return taskRepository.save(task);
+        Task savedTask = taskRepository.save(task);
+        
+        // GlobalLog 기록
+        globalLogService.createLog(
+            "Task",
+            savedTask.getId(),
+            ActionType.UPDATE,
+            oldData,
+            TaskConverter.taskToMap(savedTask)
+        );
+        
+        return savedTask;
     }
 
     // 작업을 Ongoing 상태로 활성화 (Waiting에서 활성화)
     @Transactional
     public Task activateTask(Long id) {
         Task task = getTask(id);
+        Map<String, Object> oldData = TaskConverter.taskToMap(task);
+        
         task.setStatus(TaskStatus.ONGOING);
-        return taskRepository.save(task);
+        Task savedTask = taskRepository.save(task);
+        
+        // GlobalLog 기록
+        globalLogService.createLog(
+            "Task",
+            savedTask.getId(),
+            ActionType.UPDATE,
+            oldData,
+            TaskConverter.taskToMap(savedTask)
+        );
+        
+        return savedTask;
     }
 
-    // 미완료 작업의 schedule_date를 다음날로 롤오버
+    // 미완료 작업의 due_date를 다음날로 롤오버
     @Transactional
     public void rolloverIncompleteTasks() {
         LocalDate today = LocalDate.now();
-        List<Task> incompleteTasks = taskRepository.findByScheduleDateLessThanEqual(today)
+        List<Task> incompleteTasks = taskRepository.findByDueDateLessThanEqual(today)
                 .stream()
                 .filter(task -> task.getStatus() != TaskStatus.DONE)
                 .toList();
         
         for (Task task : incompleteTasks) {
-            task.setScheduleDate(today.plusDays(1));
+            task.setDueDate(today.plusDays(1));
             taskRepository.save(task);
         }
         
