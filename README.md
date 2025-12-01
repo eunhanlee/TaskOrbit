@@ -173,8 +173,8 @@ Each task displays:
 - Waiting button
 - Date
 
-### **12. Tab Features**
 
+### **12. Tab Features**
 Each tab supports:
 
 - Category filtering

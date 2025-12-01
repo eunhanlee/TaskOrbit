@@ -86,3 +86,4 @@ CREATE TRIGGER update_recurring_task_settings_updated_at BEFORE UPDATE ON recurr
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 
+
